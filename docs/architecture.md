@@ -1,12 +1,12 @@
 # RadiusIQ architecture
 
-RadiusIQ (formerly Radius Crawler) is a TypeScript monorepo with two deployable apps: a Next.js 15 frontend and a NestJS 10 API. Both run in Docker Compose behind Nginx on a single VPS, and they share a PostgreSQL instance with other services on that host.
+RadiusIQ (also known as Radius Crawler) is a TypeScript monorepo with two deployable apps: a Next.js 15 frontend and a NestJS 10 API. Both run in Docker Compose behind Nginx on a single VPS, backed by PostgreSQL (Prisma 7).
 
 ## Components
 
 | Component | Responsibility |
 |---|---|
-| **Next.js client** (`/`) | The 4-step wizard (Location → Radius → Filters → Results), Leaflet map with radius circle, Nominatim geocoding, result views (grid / list / table), business detail page, theme handling. State lives in React state and Zustand; search state is copied to session storage before navigating to a detail page. |
+| **Next.js client** (`/`) | The 4-step wizard (Location → Radius → Filters → Results), Leaflet map with radius circle, Nominatim geocoding, result views (grid / list / table), business detail page, theme handling. Wizard and search state lives in React component state (copied to session storage before navigating to a detail page); a persisted Zustand store holds auth state. |
 | **NestJS API** (`/api`) | Feature modules: `search`, `tomtom`, `google-places`, `business`, `auth`, plus `core` (config, Prisma, health) and `common` (global guard, exception filter, response interceptor, `@Public()` decorator). Global `ValidationPipe` with whitelisting; Swagger docs generated from DTOs. |
 | **TomTomModule** | Wraps the TomTom Search `nearbySearch` endpoint (lat, lon, radius, optional keyword in the path, optional `categorySet`, `limit` up to 100, `ofs` offset). Turns 400/403/429 responses into clear API errors. |
 | **GooglePlacesModule** | Wraps the Places Nearby Search and Place Details endpoints. Results are paged with `next_page_token`. |
@@ -30,7 +30,7 @@ sequenceDiagram
     C->>N: Geocode (debounced 500 ms)
     N-->>C: Candidate places
     U->>C: Pick place, set radius (1–50 km), choose categories / keyword
-    C->>A: POST { provider, lat, lng, radius(m), keyword, categorySet | type, offset, limit }
+    C->>A: POST { provider, latitude, longitude, radius(m), keyword, categorySet | type, offset, limit }
     alt provider = tomtom
         A->>P: nearbySearch (≤100 POIs, offset paging)
     else provider = google
@@ -54,7 +54,7 @@ The two providers return very different payloads. The search service maps both i
 
 - **Category:** the TomTom classification code or the highest-priority Google type (restaurant, cafe, bar, store, and so on), turned into a readable label.
 - **Address:** TomTom's `freeformAddress`, or one rebuilt from its parts. For Google, the formatted address plus address components (locality, admin area, postal code, country).
-- **Contact and extras:** phone, website (URLs without a scheme are normalised), and opening hours (TomTom time ranges or Google weekday text). Google results also carry rating, review count, price level and a proxied photo URL.
+- **Contact and extras:** phone, website (URLs without a scheme are normalised), and opening hours (Google weekday text; TomTom time ranges are mapped when present). Google results also carry rating, review count, price level and a proxied photo URL.
 
 The frontend keeps a single category list in which each entry has both a TomTom category id and a Google Places type, so the same filter UI works with either provider.
 
@@ -76,6 +76,6 @@ flowchart TB
 ```
 
 - **Images:** multi-stage `node:22-alpine` builds. Prisma client is generated at build time, the Next.js output is `standalone`, and the containers run as non-root users (`nestjs`, `nextjs`).
-- **Runtime:** containers listen only on the host loopback. Nginx terminates TLS (Let's Encrypt), proxies `/` to the frontend and `/api` to the backend. Each service has a `wget` health check and memory limits. The backend joins an external Docker network to reach the shared Postgres.
+- **Runtime:** containers listen only on the host loopback. Nginx terminates TLS (Let's Encrypt), proxies `/` to the frontend and `/api` to the backend. Each service has a `wget` health check and memory limits.
 - **Config:** `NEXT_PUBLIC_*` values are passed to the frontend as build args. Provider keys and the JWT secret exist only in the backend's environment.
 - **Provisioned for later:** the Compose stack includes a Redis service with an LRU memory cap. The API does not use it yet; it is reserved for response caching.

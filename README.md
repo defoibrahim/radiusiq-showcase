@@ -4,7 +4,7 @@
 
 **Pick a point on the map, draw a radius, and get every matching business inside it, from TomTom or Google Places.**
 
-<sub>Formerly <i>Radius Crawler</i></sub>
+<sub>Also known as <i>Radius Crawler</i></sub>
 
 <br />
 
@@ -25,7 +25,7 @@
 > This is a showcase repository. The source code is private (personal project). It documents what the product does, how it's built and my role. Happy to walk through the code in an interview.
 
 <p align="center">
-  <img src="docs/screenshots/results-table.webp" width="100%" alt="RadiusIQ results step in table view: 100 cafes found within a 2 km radius of Dubai Marina, with category, rating, location and open status columns and an Export button" />
+  <img src="docs/screenshots/results-table.webp" width="100%" alt="RadiusIQ results step in table view: 100 cafes found within a 2 km radius of Dubai Marina, with distance, category, rating and location columns" />
 </p>
 
 ## Screenshots
@@ -41,7 +41,7 @@ All screenshots are real captures of the live site, taken during one search for 
   <img src="docs/screenshots/results-list.webp" width="49%" alt="Step 4, Results in list view: cafe cards with category, distance from the centre point and address" />
 </p>
 <p align="center">
-  <img src="docs/screenshots/business-detail.webp" width="49%" alt="Business detail page for a cafe: name, category, open status, address, a mini map with the location pin, Open in Google Maps and Get Directions actions" />
+  <img src="docs/screenshots/business-detail.webp" width="49%" alt="Business detail page for a cafe: name, category, address, a mini map with the location pin, Open in Google Maps and Get Directions actions" />
   <img src="docs/screenshots/results-table-dark.webp" width="49%" alt="Results table in dark mode" />
 </p>
 
@@ -57,7 +57,7 @@ All screenshots are real captures of the live site, taken during one search for 
 
 **Define the search area**
 - Find a starting point by typing an address or place name (debounced OpenStreetMap Nominatim geocoding), by clicking the map, or with the browser's geolocation (**Use my location**).
-- Set the radius from 1 to 50 km with a slider or quick presets (1 / 5 / 10 / 25 / 50 km). The circle is drawn live on a Leaflet + OpenStreetMap map, and the map zooms to fit the radius.
+- Set the radius from 1 to 50 km with a slider or quick presets (1 / 5 / 10 / 25 / 50 km). The circle is drawn live on a Leaflet + OpenStreetMap map, and the map zoom adjusts to the radius.
 
 **Narrow it down**
 - 25 categories in 5 groups (Food & Drink, Shopping, Services, Health & Wellness, Travel & Leisure). Each one maps to both a TomTom category code and a Google Places type.
@@ -67,7 +67,7 @@ All screenshots are real captures of the live site, taken during one search for 
 **Work with the results**
 - Grid, list and table views, active-filter chips you can remove, and "Load more" pagination (TomTom offset paging, Google `next_page_token`).
 - Results are ranked nearest-first by straight-line (Haversine) distance from the chosen centre, and each card shows that distance.
-- Each business has its own page with its address, a phone number and website when the provider has them, opening hours, a rating and photo for Google results, a mini map, **Open in Google Maps**, **Get Directions** and Web Share.
+- Each business has its own page with its address, a phone number and website when the provider has them, plus opening hours, rating and photo for Google results, a mini map, **Open in Google Maps**, **Get Directions** and Web Share.
 - Search state (results, step, location, radius, filters and scroll position) is kept in session storage, so going back from a detail page returns you to the same place in the list.
 
 **Data and API**
@@ -95,7 +95,7 @@ flowchart LR
             BIZ["BusinessModule<br/>CRUD · search · CSV/XLSX · photo proxy"]
             AUTH["AuthModule<br/>global JWT guard + @Public()"]
         end
-        PG[("PostgreSQL<br/>shared instance · Prisma 7")]
+        PG[("PostgreSQL<br/>Prisma 7")]
     end
 
     TOMTOM["TomTom Search API<br/>nearbySearch"]
@@ -119,16 +119,16 @@ More detail, including the search sequence and the data model, is in [docs/archi
 
 - **One endpoint for two providers.** `POST /api/search/nearby` takes a `provider` field. TomTom and Google responses are normalised into a single `Business` shape (category formatting, address assembly, opening hours, URL normalisation), so the frontend renders both the same way.
 - **Provider-specific paging and cost.** TomTom returns up to 100 POIs per request with offset paging and needs no detail calls. Google is paged by token and needs a Place Details call per result. TomTom is the default provider, so a typical search costs one upstream request.
-- **API keys stay on the server.** The browser never sees a provider key. Google photos are streamed through a public `/api/businesses/photo` proxy, and photo URLs are built from a configured public API URL rather than `localhost`.
-- **Protected by default.** A global `APP_GUARD` applies JWT auth to every route, and only the endpoints the guest flow needs (nearby search, business by id, photo proxy, health, register and login) opt out with a `@Public()` decorator.
+- **API keys stay on the server.** The browser never sees a provider key. Google photos are streamed through a server-side photo proxy, and photo URLs are built from a configured public API URL rather than `localhost`.
+- **Protected by default.** A global `APP_GUARD` applies JWT auth to every route, and only the endpoints the guest search flow needs opt out with a `@Public()` decorator.
 - **Results are stored, not thrown away.** Each result is upserted on name + coordinates, so repeated searches update existing rows instead of creating duplicates. The stored data then backs export and filtered search.
-- **Small production containers.** Multi-stage `node:22-alpine` images run as non-root users (Next.js `output: 'standalone'`), with health checks and memory limits. A GitHub Actions pipeline builds both images and runs the backend test step against a throwaway Postgres service. On `main` it deploys over SSH, applies Prisma migrations and rolls back to the previous commit if the health checks fail.
+- **Small production containers.** Multi-stage `node:22-alpine` images run as non-root users (Next.js `output: 'standalone'`), with health checks and memory limits. A GitHub Actions pipeline builds both images and runs the backend test step against a throwaway Postgres service. On `main` it deploys over SSH, runs `prisma migrate deploy` and rolls back to the previous commit if the health checks fail.
 
 ## Tech stack
 
 | Layer | Tech |
 |---|---|
-| Frontend | Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS, Zustand, TanStack Query, Axios, React Hook Form + Zod, Lucide icons |
+| Frontend | Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS, Zustand (persisted auth state), Axios, Lucide icons |
 | Maps & geocoding | Leaflet / react-leaflet, OpenStreetMap tiles, OSM Nominatim |
 | Backend | NestJS 10, class-validator DTOs, Passport JWT, bcrypt, Swagger / OpenAPI, ExcelJS |
 | Data providers | TomTom Search API (nearby search), Google Places API (nearby search, place details, photos) |
@@ -143,7 +143,7 @@ This is my personal project, and I am its only developer. I designed and built a
 - Product and UX: the 4-step wizard, the category taxonomy mapped to both providers, and the result views and detail page.
 - Frontend: Next.js app, Leaflet map and radius tooling, geocoding, theming, and keeping search state across navigation.
 - Backend: NestJS module structure, TomTom and Google Places integrations, normalisation and deduplication, export, auth and Swagger docs.
-- DevOps: multi-stage Dockerfiles, Compose stack on a shared Postgres, the Nginx/TLS setup and the CI/CD pipeline with automatic rollback.
+- DevOps: multi-stage Dockerfiles, Compose stack, the Nginx/TLS setup and the CI/CD pipeline with automatic rollback.
 
 I used AI coding agents as part of the workflow (several feature branches were produced with an agent pipeline and reviewed and merged by me, and a Claude Code review action runs on pull requests). Commits made by those agents and by my server account are part of my own repository history.
 
@@ -151,7 +151,7 @@ I used AI coding agents as part of the workflow (several feature branches were p
 
 - **Live:** [radius.everbuild.cloud](https://radius.everbuild.cloud). Searching works without an account.
 - **Timeline:** built between January and February 2026 (git history from 24 Jan to 4 Feb 2026), with maintenance since then (base image moved to `node:22-alpine` in October 2026).
-- **Next:** connect the results toolbar's Export menu and sort control to the existing API endpoints (the export and sorted-search endpoints exist, but the toolbar controls don't call them yet), and add saved searches and history for signed-in users (the data model and endpoints already exist).
+- **Next:** connect the results toolbar's Export menu and sort control to the existing API endpoints (the export and sorted-search endpoints exist, but the toolbar controls don't call them yet), and add saved searches and history for signed-in users (the data model and search-history endpoints already exist).
 
 ---
 
