@@ -25,33 +25,50 @@
 > This is a showcase repository. The source code is private (personal project). It documents what the product does, how it's built and my role. Happy to walk through the code in an interview.
 
 <p align="center">
-  <img src="docs/screenshots/results-table.webp" width="100%" alt="RadiusIQ results step in table view: 100 cafes found within a 2 km radius of Dubai Marina, with distance, category, rating and location columns" />
+  <img src="docs/screenshots/radius-dark.webp" width="100%" alt="RadiusIQ in the dark Midnight theme, radius step: slider and 1 km preset selected, with a glowing sky-blue 1 km circle drawn over darkened OpenStreetMap tiles of Dubai Marina" />
 </p>
 
 ## Screenshots
 
-All screenshots are real captures of the live site, taken during one search for cafes within 2 km of Dubai Marina (TomTom provider). The results are public points of interest returned by the TomTom Search API.
+RadiusIQ has a light theme and a dark "Midnight" theme, and every screen is shown in both below. All screenshots are real captures of the live site at 1600x900, taken during one search for cafes within 1 km of Dubai Marina (TomTom provider). The results are public points of interest returned by the TomTom Search API.
 
-<p align="center">
-  <img src="docs/screenshots/location-dubai-marina.webp" width="49%" alt="Step 1, Location: 'Dubai Marina' geocoded from the search box, map centred on the Marina with the coordinates shown next to a Use my location button" />
-  <img src="docs/screenshots/radius-selection.webp" width="49%" alt="Step 2, Radius: slider set to 2 km with 1/5/10/25/50 km presets and the search circle drawn on the map" />
-</p>
-<p align="center">
-  <img src="docs/screenshots/category-filters-searching.webp" width="49%" alt="Step 3, Filters: search summary (coordinates, 2 km radius, 1 category), optional keyword field, Cafes selected among 25 categories in 5 groups, and the Search button in its Searching state" />
-  <img src="docs/screenshots/results-list.webp" width="49%" alt="Step 4, Results in list view: cafe cards with category, distance from the centre point and address" />
-</p>
-<p align="center">
-  <img src="docs/screenshots/business-detail.webp" width="49%" alt="Business detail page for a cafe: name, category, address, a mini map with the location pin, Open in Google Maps and Get Directions actions" />
-  <img src="docs/screenshots/results-table-dark.webp" width="49%" alt="Results table in dark mode" />
-</p>
-
-**Mobile**
-
-<p align="center">
-  <img src="docs/screenshots/mobile-location.webp" width="30%" alt="Mobile: location step with the geocoded Dubai Marina point and radius circle" />
-  <img src="docs/screenshots/mobile-filters.webp" width="30%" alt="Mobile: filters step with search summary, keyword field and category chips" />
-  <img src="docs/screenshots/mobile-business-detail.webp" width="30%" alt="Mobile: business detail page with header card, address and map" />
-</p>
+<table>
+  <tr>
+    <th width="14%"></th>
+    <th width="43%">Dark (Midnight)</th>
+    <th width="43%">Light</th>
+  </tr>
+  <tr>
+    <td><b>1. Location</b></td>
+    <td><img src="docs/screenshots/location-dark.webp" width="100%" alt="Step 1, Location, dark theme: Dubai Marina geocoded from the search box, coordinates next to a Use my location button, and the default circle on darkened map tiles" /></td>
+    <td><img src="docs/screenshots/location-light.webp" width="100%" alt="Step 1, Location, light theme: Dubai Marina geocoded from the search box with the map centred on it and the default search circle" /></td>
+  </tr>
+  <tr>
+    <td><b>2. Radius</b></td>
+    <td align="center"><sub>Shown at the top</sub></td>
+    <td><img src="docs/screenshots/radius-light.webp" width="100%" alt="Step 2, Radius, light theme: slider set to 1 km with 1/5/10/25/50 km presets and the 1 km circle drawn in dark blue on the map" /></td>
+  </tr>
+  <tr>
+    <td><b>3. Filters</b></td>
+    <td><img src="docs/screenshots/filters-dark.webp" width="100%" alt="Step 3, Filters, dark theme: search summary with coordinates, 1 km radius and 1 category, an optional keyword field, and Cafes selected among 25 categories in 5 groups" /></td>
+    <td><img src="docs/screenshots/filters-light.webp" width="100%" alt="Step 3, Filters, light theme: the same summary, keyword field and category chips with Cafes selected" /></td>
+  </tr>
+  <tr>
+    <td><b>4. Results, grid</b></td>
+    <td><img src="docs/screenshots/results-grid-dark.webp" width="100%" alt="Step 4, Results in grid view, dark theme: 67 cafes found, active filter chips for 1 km radius and Cafes, and cards with category, Open badge, address and distance" /></td>
+    <td><img src="docs/screenshots/results-grid-light.webp" width="100%" alt="Step 4, Results in grid view, light theme: the same 67 cafes as cards with category, Open badge, address and distance" /></td>
+  </tr>
+  <tr>
+    <td><b>4. Results, table</b></td>
+    <td><img src="docs/screenshots/results-table-dark.webp" width="100%" alt="Step 4, Results in table view, dark theme: business name with distance, category, rating, location and status columns, nearest first" /></td>
+    <td><img src="docs/screenshots/results-table-light.webp" width="100%" alt="Step 4, Results in table view, light theme: the same columns with Open status pills" /></td>
+  </tr>
+  <tr>
+    <td><b>Business detail</b></td>
+    <td><img src="docs/screenshots/business-detail-dark.webp" width="100%" alt="Business detail page, dark theme: a cafe's name, category, Open Now badge and address, a mini map with the location pin, Open in Google Maps and Get Directions" /></td>
+    <td><img src="docs/screenshots/business-detail-light.webp" width="100%" alt="Business detail page, light theme: the same cafe with address, mini map, Open in Google Maps and Get Directions" /></td>
+  </tr>
+</table>
 
 ## Features
 
@@ -73,7 +90,7 @@ All screenshots are real captures of the live site, taken during one search for 
 **Data and API**
 - Every result is upserted into PostgreSQL, deduplicated by name and coordinates.
 - The API has CSV and XLSX (ExcelJS) export endpoints, filtered and sorted business search, nearby lookup and a category list, all documented with Swagger/OpenAPI.
-- Light and dark themes: the app follows the system preference and has a manual toggle that it remembers.
+- Light and dark ("Midnight") themes built on semantic colour tokens. In dark mode the OpenStreetMap tiles are darkened and the radius circle is drawn in a glowing sky-blue accent. The app follows the system preference and has a manual toggle that it remembers.
 
 ## Architecture
 
@@ -150,7 +167,7 @@ I used AI coding agents as part of the workflow (several feature branches were p
 ## Status
 
 - **Live:** [radius.everbuild.cloud](https://radius.everbuild.cloud). Searching works without an account.
-- **Timeline:** built between January and February 2026 (git history from 24 Jan to 4 Feb 2026), with maintenance since then (base image moved to `node:22-alpine` in October 2026).
+- **Timeline:** built between January and February 2026 (git history from 24 Jan to 4 Feb 2026), with maintenance since then (base image moved to `node:22-alpine` in October 2026, and the light and dark themes reworked in November 2026).
 - **Next:** connect the results toolbar's Export menu and sort control to the existing API endpoints (the export and sorted-search endpoints exist, but the toolbar controls don't call them yet), and add saved searches and history for signed-in users (the data model and search-history endpoints already exist).
 
 ---
